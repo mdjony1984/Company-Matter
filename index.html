@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Company Matter Records</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f7f7f7; }
+    h2 { text-align: center; }
+    form, table { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    select, input[type="text"], input[type="number"], input[type="date"] { width: 100%; padding: 5px; margin-top: 5px; }
+    button { padding: 8px 15px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+    .add-btn { background: #4CAF50; color: white; }
+    .edit-btn { background: #2196F3; color: white; }
+    .delete-btn { background: #f44336; color: white; }
+    .clear-btn { background: #9E9E9E; color: white; }
+    .print-btn { background: #FF9800; color: white; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background-color: #f2f2f2; }
+</style>
+</head>
+<body>
+
+<h2>Company Matter Records</h2>
+
+<form id="recordForm">
+    <label>Case Type:</label>
+    <input type="text" id="caseType" value="Company Matter" readonly>
+
+    <label>Case Number:</label>
+    <input type="number" id="caseNumber" required>
+
+    <label>Year:</label>
+    <input type="number" id="year" required>
+
+    <label>Sent Court:</label>
+    <select id="sentCourt">
+        <option>Court- 31(B-71)</option>
+        <option>Court- 25(M)</option>
+        <option>Court- 34(A)</option>
+    </select>
+
+    <label>Sent Date:</label>
+    <input type="date" id="sentDate" required>
+
+    <label>Received Court:</label>
+    <select id="receivedCourt">
+        <option>Court- 31(B-71)</option>
+        <option>Court- 25(M)</option>
+        <option>Court- 34(A)</option>
+    </select>
+
+    <label>Received Date:</label>
+    <input type="date" id="receivedDate" required>
+
+    <label>Typist Name:</label>
+    <input type="text" id="typistName" required>
+
+    <label>Typist Date:</label>
+    <input type="date" id="typistDate" required>
+
+    <label>A.R Date:</label>
+    <input type="date" id="arDate">
+
+    <label>Dispatch Date:</label>
+    <input type="date" id="dispatchDate">
+
+    <label>R.A Date:</label>
+    <input type="date" id="raDate">
+
+    <button type="button" class="add-btn" onclick="addRecord()">Add Record</button>
+</form>
+
+<table id="recordsTable">
+    <thead>
+        <tr>
+            <th>Case Type</th>
+            <th>Case Number</th>
+            <th>Year</th>
+            <th>Sent Court & Date</th>
+            <th>Received Court & Date</th>
+            <th>Typist Name & Date</th>
+            <th>A.R Date</th>
+            <th>Dispatch Date</th>
+            <th>R.A Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<button class="clear-btn" onclick="clearAll()">Clear All</button>
+<button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+
+<script>
+let records = JSON.parse(localStorage.getItem("records") || "[]");
+let editIndex = -1;
+
+function formatDate(dateStr) {
+    if (!dateStr) return "";
+    let d = new Date(dateStr);
+    let month = String(d.getMonth() + 1).padStart(2, '0');
+    let day = String(d.getDate()).padStart(2, '0');
+    let year = d.getFullYear();
+    return `${month}/${day}/${year}`;
+}
+
+function renderTable() {
+    const tbody = document.querySelector("#recordsTable tbody");
+    tbody.innerHTML = "";
+    records.forEach((rec, index) => {
+        tbody.innerHTML += `
+        <tr>
+            <td>${rec.caseType}</td>
+            <td>${rec.caseNumber}</td>
+            <td>${rec.year}</td>
+            <td>${rec.sentCourt} <br> ${formatDate(rec.sentDate)}</td>
+            <td>${rec.receivedCourt} <br> ${formatDate(rec.receivedDate)}</td>
+            <td>${rec.typistName} <br> ${formatDate(rec.typistDate)}</td>
+            <td>${formatDate(rec.arDate)}</td>
+            <td>${formatDate(rec.dispatchDate)}</td>
+            <td>${formatDate(rec.raDate)}</td>
+            <td>
+                <button class="edit-btn" onclick="editRecord(${index})">Edit</button>
+                <button class="delete-btn" onclick="deleteRecord(${index})">Delete</button>
+            </td>
+        </tr>
+        `;
+    });
+    localStorage.setItem("records", JSON.stringify(records));
+}
+
+function addRecord() {
+    const record = {
+        caseType: document.getElementById("caseType").value,
+        caseNumber: document.getElementById("caseNumber").value,
+        year: document.getElementById("year").value,
+        sentCourt: document.getElementById("sentCourt").value,
+        sentDate: document.getElementById("sentDate").value,
+        receivedCourt: document.getElementById("receivedCourt").value,
+        receivedDate: document.getElementById("receivedDate").value,
+        typistName: document.getElementById("typistName").value,
+        typistDate: document.getElementById("typistDate").value,
+        arDate: document.getElementById("arDate").value,
+        dispatchDate: document.getElementById("dispatchDate").value,
+        raDate: document.getElementById("raDate").value
+    };
+
+    if (editIndex === -1) {
+        records.push(record);
+    } else {
+        records[editIndex] = record;
+        editIndex = -1;
+    }
+    document.getElementById("recordForm").reset();
+    document.getElementById("caseType").value = "Company Matter";
+    renderTable();
+}
+
+function editRecord(index) {
+    const rec = records[index];
+    document.getElementById("caseType").value = rec.caseType;
+    document.getElementById("caseNumber").value = rec.caseNumber;
+    document.getElementById("year").value = rec.year;
+    document.getElementById("sentCourt").value = rec.sentCourt;
+    document.getElementById("sentDate").value = rec.sentDate;
+    document.getElementById("receivedCourt").value = rec.receivedCourt;
+    document.getElementById("receivedDate").value = rec.receivedDate;
+    document.getElementById("typistName").value = rec.typistName;
+    document.getElementById("typistDate").value = rec.typistDate;
+    document.getElementById("arDate").value = rec.arDate;
+    document.getElementById("dispatchDate").value = rec.dispatchDate;
+    document.getElementById("raDate").value = rec.raDate;
+    editIndex = index;
+}
+
+function deleteRecord(index) {
+    if (confirm("Are you sure you want to delete this record?")) {
+        records.splice(index, 1);
+        renderTable();
+    }
+}
+
+function clearAll() {
+    if (confirm("Clear all records?")) {
+        records = [];
+        renderTable();
+    }
+}
+
+renderTable();
+</script>
+
+</body>
+</html>
